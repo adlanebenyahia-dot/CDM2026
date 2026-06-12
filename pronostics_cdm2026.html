@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pronostics Coupe du Monde 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f4f0;color:#1a1a1a;min-height:100vh}
+.app{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+.header{text-align:center;margin-bottom:1.2rem}
+.header h1{font-size:22px;font-weight:700;margin-bottom:3px}
+.header p{font-size:13px;color:#666}
+.tabs{display:flex;gap:3px;margin-bottom:1.2rem;border-bottom:1px solid #ddd;flex-wrap:wrap}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;border:none;background:transparent;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:#333;background:#eee}
+.tab.active{color:#1a1a1a;border-bottom:2px solid #1a1a1a;font-weight:700;background:#fff}
+.section{display:none}.section.active{display:block}
+select,input[type=text],input[type=number],input[type=password]{border-radius:5px;padding:5px 8px;font-size:13px;border:1px solid #ccc;background:#fff;outline:none}
+input[type=number]{width:42px;text-align:center;padding:3px 2px}
+.btn{padding:6px 14px;font-size:12px;border-radius:5px;cursor:pointer;font-weight:600;border:none}
+.btn-primary{background:#1a1a1a;color:#fff}.btn-primary:hover{background:#333}
+.btn-sm{padding:4px 10px;font-size:11px}
+/* Matchs en liste chronologique */
+.match-list{display:flex;flex-direction:column;gap:2px}
+.day-header{padding:6px 10px;background:#e8e4df;font-weight:700;font-size:12px;color:#444;margin-top:8px;border-radius:4px;position:sticky;top:0;z-index:2}
+.match-row{display:grid;grid-template-columns:70px 1fr 96px 1fr 50px;align-items:center;gap:6px;padding:7px 10px;background:#fff;border:1px solid #ebebeb;border-radius:5px;font-size:12px}
+.match-row:hover{border-color:#ccc}
+.match-date{font-size:10px;color:#999;white-space:nowrap}
+.team{display:flex;align-items:center;gap:4px}
+.team.right{justify-content:flex-end;text-align:right}
+.team-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.flag{font-size:16px;line-height:1;flex-shrink:0}
+.score-box{display:flex;align-items:center;justify-content:center;gap:3px}
+.score-box input{width:38px;padding:3px;font-size:12px;border-radius:4px;border:1px solid #ccc;text-align:center}
+.score-dash{color:#bbb;font-size:11px}
+.group-tag{font-size:10px;color:#999;font-weight:600}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-exact{background:#22c55e}
+.dot-win{background:#3b82f6}
+.dot-miss{background:#d1d5db}
+.dot-none{background:transparent}
+/* Leaderboard */
+.leaderboard{border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;background:#fff}
+.lb-row{display:grid;grid-template-columns:38px 1fr 55px 55px 60px;align-items:center;padding:8px 14px;border-bottom:1px solid #f0f0f0;font-size:13px}
+.lb-row:last-child{border-bottom:none}
+.lb-header{background:#f0f0ee;font-weight:600;font-size:11px;color:#888}
+.lb-row.gold{background:#fffbeb}.lb-row.silver{background:#f8f8f8}.lb-row.bronze{background:#fdf5ee}
+.rank{font-weight:700;color:#aaa}
+.rank.r1{color:#b8860b}.rank.r2{color:#888}.rank.r3{color:#9c6c2c}
+.pts{font-weight:700;text-align:right}
+.col-r{text-align:right;color:#888}
+/* Players */
+.player-bar{display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+.players-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
+.player-chip{font-size:11px;padding:4px 10px;border-radius:16px;background:#fff;border:1px solid #ccc;cursor:pointer;user-select:none;white-space:nowrap}
+.player-chip:hover{border-color:#888}
+.player-chip.selected{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.section-title{font-size:15px;font-weight:700;margin-bottom:.8rem}
+.summary-bar{display:flex;gap:.8rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.stat-card{background:#f0f0ee;border-radius:6px;padding:8px 14px;text-align:center;min-width:72px}
+.stat-card .num{font-size:20px;font-weight:700}
+.stat-card .lbl{font-size:10px;color:#888;margin-top:1px}
+.toast{font-size:12px;color:#16a34a;font-weight:600}
+/* Admin */
+.admin-notice{font-size:12px;color:#666;margin-bottom:1rem;padding:8px 12px;background:#fff8e1;border-radius:6px;border-left:3px solid #f0a500}
+.pwd-screen{max-width:320px;margin:2rem auto;text-align:center;background:#fff;border-radius:10px;padding:2rem;border:1px solid #e0e0e0}
+.pwd-screen h2{font-size:16px;font-weight:700;margin-bottom:1rem}
+.pwd-screen p{font-size:12px;color:#888;margin-top:.5rem}
+.pwd-row{display:flex;gap:6px;justify-content:center;margin-top:1rem}
+.save-bar{margin-top:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.player-add{display:flex;gap:6px;margin-bottom:.8rem}
+.filter-bar{display:flex;gap:6px;margin-bottom:.8rem;flex-wrap:wrap;align-items:center}
+.filter-bar label{font-size:12px;color:#666}
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>⚽ Pronostics Coupe du Monde 2026</h1>
+    <p>Phase de poules — 12 groupes · 72 matchs</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('joueurs')">👥 Joueurs</button>
+    <button class="tab" onclick="showTab('pronostics')">📝 Pronostics</button>
+    <button class="tab" onclick="showTab('classement')">🏆 Classement</button>
+    <button class="tab" onclick="showTab('admin')">🔧 Admin</button>
+  </div>
+
+  <!-- JOUEURS -->
+  <div id="tab-joueurs" class="section active">
+    <p class="section-title">Joueurs inscrits</p>
+    <div class="player-add">
+      <input type="text" id="new-player-name" placeholder="Nom du joueur..." style="flex:1;max-width:200px">
+      <button class="btn btn-primary btn-sm" onclick="addPlayer()">+ Ajouter</button>
+    </div>
+    <div id="players-list" class="players-list"></div>
+    <p style="font-size:11px;color:#888;margin-top:6px"><span id="player-count-info"></span> — Cliquer sur un nom pour accéder à ses pronostics.</p>
+  </div>
+
+  <!-- PRONOSTICS -->
+  <div id="tab-pronostics" class="section">
+    <div id="prono-pwd-screen" class="pwd-screen">
+      <h2>🔒 Accès pronostics</h2>
+      <p>Entrez le mot de passe pour consulter et modifier vos pronostics.</p>
+      <div class="pwd-row">
+        <input type="password" id="prono-pwd-input" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')checkPronoPwd()">
+        <button class="btn btn-primary btn-sm" onclick="checkPronoPwd()">Valider</button>
+      </div>
+      <p id="prono-pwd-error" style="color:#e11d48;margin-top:.5rem;display:none">Mot de passe incorrect.</p>
+    </div>
+    <div id="prono-content" style="display:none">
+      <div class="player-bar">
+        <label style="font-size:13px;color:#666">Joueur :</label>
+        <select id="player-select" onchange="renderMatches()">
+          <option value="">-- Choisir --</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="btn-save-prono" onclick="savePronostics()">💾 Sauvegarder</button>
+        <span id="save-toast" class="toast" style="display:none">✓ Sauvegardé !</span>
+        <button class="btn btn-sm" style="background:#f0f0f0;margin-left:auto" onclick="logoutProno()">Déconnexion</button>
+      </div>
+      <div id="locked-notice" style="display:none;padding:8px 12px;background:#fff8e1;border-left:3px solid #f0a500;border-radius:6px;font-size:12px;margin-bottom:1rem;color:#666">
+        🔒 Les pronostics sont verrouillés — consultation uniquement, aucune modification possible.
+      </div>
+      <div id="player-summary" class="summary-bar" style="display:none"></div>
+      <div class="filter-bar">
+        <label>Groupe :</label>
+        <select id="group-filter" onchange="renderMatches()">
+          <option value="">Tous</option>
+          <option>A</option><option>B</option><option>C</option><option>D</option>
+          <option>E</option><option>F</option><option>G</option><option>H</option>
+          <option>I</option><option>J</option><option>K</option><option>L</option>
+        </select>
+      </div>
+      <div id="match-list" class="match-list"></div>
+    </div>
+  </div>
+
+  <!-- CLASSEMENT -->
+  <div id="tab-classement" class="section">
+    <p class="section-title">Classement général</p>
+    <div class="leaderboard">
+      <div class="lb-row lb-header">
+        <div>#</div><div>Joueur</div><div class="col-r">Exact</div><div class="col-r">Bon résultat</div><div class="pts">Pts</div>
+      </div>
+      <div id="leaderboard-body"></div>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:8px">🟢 Score exact = 5 pts &nbsp;·&nbsp; 🔵 Bon vainqueur / bon nul = 2 pts</p>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="tab-admin" class="section">
+    <div id="admin-pwd-screen" class="pwd-screen">
+      <h2>🔒 Accès organisateur</h2>
+      <p>Entrez le mot de passe pour saisir les scores réels.</p>
+      <div class="pwd-row">
+        <input type="password" id="pwd-input" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter')checkPwd()">
+        <button class="btn btn-primary btn-sm" onclick="checkPwd()">Valider</button>
+      </div>
+      <p id="pwd-error" style="color:#e11d48;margin-top:.5rem;display:none">Mot de passe incorrect.</p>
+    </div>
+    <div id="admin-content" style="display:none">
+      <div class="admin-notice">🔒 Mode organisateur — Saisir les scores réels. Le classement se met à jour automatiquement pour tous les joueurs.</div>
+      <div style="margin-bottom:1rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div id="lock-status" style="font-size:13px;font-weight:600"></div>
+        <button id="btn-toggle-lock" class="btn btn-sm" onclick="toggleLock()"></button>
+        <span style="font-size:11px;color:#888">Mot de passe pronostics : <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px">cdm2026</code></span>
+      </div>
+      <div id="admin-match-list" class="match-list"></div>
+      <div class="save-bar">
+        <button class="btn btn-primary" onclick="saveAdminScores()">💾 Enregistrer les scores réels</button>
+        <span id="admin-toast" class="toast" style="display:none">✓ Scores enregistrés !</span>
+        <button class="btn btn-sm" style="background:#f0f0f0;margin-left:auto" onclick="logoutAdmin()">Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAkXTUgpU0Q7W4_S514FJK7sRAErP0FNqk",
+  authDomain: "pronostics-cdm-2026-4c1c6.firebaseapp.com",
+  databaseURL: "https://pronostics-cdm-2026-4c1c6-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "pronostics-cdm-2026-4c1c6",
+  storageBucket: "pronostics-cdm-2026-4c1c6.firebasestorage.app",
+  messagingSenderId: "921651160903",
+  appId: "1:921651160903:web:dee7ade55398bace684e62",
+  measurementId: "G-K8H6DHRF01"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ===== GROUPES =====
+const G = {
+  A:['🇲🇽 Mexique','🇿🇦 Afrique du Sud','🇰🇷 Corée du Sud','🇨🇿 Tchéquie'],
+  B:['🇨🇦 Canada','🇧🇦 Bosnie-Herzégovine','🇶🇦 Qatar','🇨🇭 Suisse'],
+  C:['🇧🇷 Brésil','🇲🇦 Maroc','🇭🇹 Haïti','🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse'],
+  D:['🇺🇸 États-Unis','🇵🇾 Paraguay','🇦🇺 Australie','🇹🇷 Turquie'],
+  E:['🇩🇪 Allemagne','🇨🇼 Curaçao','🇨🇮 Côte d\'Ivoire','🇪🇨 Équateur'],
+  F:['🇳🇱 Pays-Bas','🇯🇵 Japon','🇸🇪 Suède','🇹🇳 Tunisie'],
+  G:['🇧🇪 Belgique','🇪🇬 Égypte','🇮🇷 Iran','🇳🇿 Nouvelle-Zélande'],
+  H:['🇪🇸 Espagne','🇨🇻 Cap-Vert','🇸🇦 Arabie Saoudite','🇺🇾 Uruguay'],
+  I:['🇫🇷 France','🇸🇳 Sénégal','🇮🇶 Irak','🇳🇴 Norvège'],
+  J:['🇦🇷 Argentine','🇩🇿 Algérie','🇦🇹 Autriche','🇯🇴 Jordanie'],
+  K:['🇵🇹 Portugal','🇨🇩 RD Congo','🇺🇿 Ouzbékistan','🇨🇴 Colombie'],
+  L:['🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre','🇭🇷 Croatie','🇬🇭 Ghana','🇵🇦 Panama']
+};
+
+// ===== MATCHS EN ORDRE CHRONOLOGIQUE (comme sur les fiches) =====
+// Matchs par groupe dans l'ordre exact des fiches scannées:
+// J1: 0v1, J1: 2v3, J2: 0v2, J2: 1v3, J3: 0v3, J3: 1v2
+const MATCH_DATES = {
+  A: [{h:0,a:1,d:'11/06',t:'21:00',k:'A_0-1'},{h:2,a:3,d:'12/06',t:'04:00',k:'A_2-3'},{h:3,a:1,d:'18/06',t:'18:00',k:'A_1-3'},{h:0,a:2,d:'19/06',t:'03:00',k:'A_0-2'},{h:3,a:0,d:'25/06',t:'03:00',k:'A_0-3'},{h:1,a:2,d:'25/06',t:'03:00',k:'A_1-2'}],
+  B: [{h:0,a:1,d:'12/06',t:'21:00',k:'B_0-1'},{h:2,a:3,d:'13/06',t:'21:00',k:'B_2-3'},{h:3,a:1,d:'19/06',t:'21:00',k:'B_1-3'},{h:0,a:2,d:'18/06',t:'21:00',k:'B_0-2'},{h:3,a:0,d:'24/06',t:'21:00',k:'B_0-3'},{h:1,a:2,d:'24/06',t:'21:00',k:'B_1-2'}],
+  C: [{h:0,a:1,d:'13/06',t:'00:00',k:'C_0-1'},{h:2,a:3,d:'14/06',t:'03:00',k:'C_2-3'},{h:3,a:1,d:'19/06',t:'00:00',k:'C_1-3'},{h:0,a:2,d:'20/06',t:'03:00',k:'C_0-2'},{h:3,a:0,d:'24/06',t:'00:00',k:'C_0-3'},{h:1,a:2,d:'24/06',t:'00:00',k:'C_1-2'}],
+  D: [{h:0,a:1,d:'13/06',t:'03:00',k:'D_0-1'},{h:2,a:3,d:'14/06',t:'06:00',k:'D_2-3'},{h:3,a:1,d:'19/06',t:'03:00',k:'D_1-3'},{h:0,a:2,d:'20/06',t:'06:00',k:'D_0-2'},{h:3,a:0,d:'26/06',t:'04:00',k:'D_0-3'},{h:1,a:2,d:'26/06',t:'04:00',k:'D_1-2'}],
+  E: [{h:0,a:1,d:'14/06',t:'19:00',k:'E_0-1'},{h:2,a:3,d:'15/06',t:'01:00',k:'E_2-3'},{h:3,a:1,d:'21/06',t:'02:00',k:'E_1-3'},{h:0,a:2,d:'20/06',t:'21:00',k:'E_0-2'},{h:3,a:0,d:'25/06',t:'22:00',k:'E_0-3'},{h:1,a:2,d:'25/06',t:'22:00',k:'E_1-2'}],
+  F: [{h:0,a:1,d:'14/06',t:'22:00',k:'F_0-1'},{h:2,a:3,d:'15/06',t:'04:00',k:'F_2-3'},{h:3,a:1,d:'21/06',t:'06:00',k:'F_1-3'},{h:0,a:2,d:'20/06',t:'22:00',k:'F_0-2'},{h:3,a:0,d:'26/06',t:'01:00',k:'F_0-3'},{h:1,a:2,d:'26/06',t:'01:00',k:'F_1-2'}],
+  G: [{h:0,a:1,d:'15/06',t:'21:00',k:'G_0-1'},{h:2,a:3,d:'16/06',t:'03:00',k:'G_2-3'},{h:3,a:1,d:'22/06',t:'03:00',k:'G_1-3'},{h:0,a:2,d:'21/06',t:'21:00',k:'G_0-2'},{h:3,a:0,d:'27/06',t:'05:00',k:'G_0-3'},{h:1,a:2,d:'27/06',t:'05:00',k:'G_1-2'}],
+  H: [{h:0,a:1,d:'15/06',t:'18:00',k:'H_0-1'},{h:2,a:3,d:'16/06',t:'00:00',k:'H_2-3'},{h:3,a:1,d:'22/06',t:'00:00',k:'H_1-3'},{h:0,a:2,d:'21/06',t:'18:00',k:'H_0-2'},{h:3,a:0,d:'27/06',t:'02:00',k:'H_0-3'},{h:1,a:2,d:'27/06',t:'02:00',k:'H_1-2'}],
+  I: [{h:0,a:1,d:'16/06',t:'21:00',k:'I_0-1'},{h:2,a:3,d:'17/06',t:'00:00',k:'I_2-3'},{h:3,a:1,d:'23/06',t:'02:00',k:'I_1-3'},{h:0,a:2,d:'22/06',t:'23:00',k:'I_0-2'},{h:3,a:0,d:'26/06',t:'21:00',k:'I_0-3'},{h:1,a:2,d:'26/06',t:'21:00',k:'I_1-2'}],
+  J: [{h:0,a:1,d:'17/06',t:'03:00',k:'J_0-1'},{h:2,a:3,d:'17/06',t:'06:00',k:'J_2-3'},{h:3,a:1,d:'23/06',t:'05:00',k:'J_1-3'},{h:0,a:2,d:'22/06',t:'19:00',k:'J_0-2'},{h:3,a:0,d:'28/06',t:'04:00',k:'J_0-3'},{h:1,a:2,d:'28/06',t:'04:00',k:'J_1-2'}],
+  K: [{h:0,a:1,d:'17/06',t:'19:00',k:'K_0-1'},{h:2,a:3,d:'18/06',t:'04:00',k:'K_2-3'},{h:3,a:1,d:'24/06',t:'04:00',k:'K_1-3'},{h:0,a:2,d:'23/06',t:'19:00',k:'K_0-2'},{h:3,a:0,d:'28/06',t:'01:00',k:'K_0-3'},{h:1,a:2,d:'28/06',t:'01:00',k:'K_1-2'}],
+  L: [{h:0,a:1,d:'17/06',t:'22:00',k:'L_0-1'},{h:2,a:3,d:'18/06',t:'01:00',k:'L_2-3'},{h:3,a:1,d:'24/06',t:'01:00',k:'L_1-3'},{h:0,a:2,d:'23/06',t:'22:00',k:'L_0-2'},{h:3,a:0,d:'27/06',t:'23:00',k:'L_0-3'},{h:1,a:2,d:'27/06',t:'23:00',k:'L_1-2'}],
+};
+
+// MATCHES_CLEAN groupé par groupe, dans l'ordre des fiches
+const MATCHES_CLEAN = [];
+for(const grp of ['A','B','C','D','E','F','G','H','I','J','K','L']){
+  for(const m of MATCH_DATES[grp]){
+    MATCHES_CLEAN.push({d:m.d,t:m.t,g:grp,h:m.h,a:m.a,k:m.k});
+  }
+}
+
+const ADMIN_PWD = 'admin2026';
+const PRONO_PWD = 'cdm2026';
+
+function tp(t){const p=t.split(' ');return{flag:p[0],name:p.slice(1).join(' ')};}
+
+// ===== PRONOSTICS PAR JOUEUR (PRE-CHARGES) =====
+const INIT_PROS = {
+  'ABA':{
+    'A_0-1':{h:'1',a:'0'},'A_0-2':{h:'3',a:'1'},'A_0-3':{h:'',a:''},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'1',a:'4'},
+    'B_0-1':{h:'1',a:'1'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'4',a:'1'},'B_1-2':{h:'0',a:'3'},'B_1-3':{h:'1',a:'2'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'1',a:'0'},'C_0-2':{h:'3',a:'0'},'C_0-3':{h:'2',a:'1'},'C_1-2':{h:'2',a:'0'},'C_1-3':{h:'1',a:'1'},'C_2-3':{h:'0',a:'1'},
+    'D_0-1':{h:'1',a:'0'},'D_0-2':{h:'1',a:'1'},'D_0-3':{h:'2',a:'1'},'D_1-2':{h:'0',a:'1'},'D_1-3':{h:'0',a:'2'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'4',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'3',a:'0'},'E_1-2':{h:'0',a:'2'},'E_1-3':{h:'2',a:'2'},'E_2-3':{h:'2',a:'1'},
+    'F_0-1':{h:'3',a:'2'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'',a:''},'F_1-2':{h:'1',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'2',a:'1'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'5',a:'1'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'1',a:'0'},'G_1-3':{h:'2',a:'1'},'G_2-3':{h:'0',a:'0'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'4',a:'1'},'H_0-3':{h:'1',a:'2'},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'1',a:'2'},'H_2-3':{h:'2',a:'1'},
+    'I_0-1':{h:'3',a:'0'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'2',a:'4'},'I_1-2':{h:'2',a:'0'},'I_1-3':{h:'0',a:'0'},'I_2-3':{h:'1',a:'4'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'5',a:'1'},'J_0-3':{h:'',a:''},'J_1-2':{h:'1',a:'0'},'J_1-3':{h:'4',a:'0'},'J_2-3':{h:'0',a:'1'},
+    'K_0-1':{h:'3',a:'1'},'K_0-2':{h:'3',a:'1'},'K_0-3':{h:'',a:''},'K_1-2':{h:'0',a:'0'},'K_1-3':{h:'1',a:'2'},'K_2-3':{h:'1',a:'2'},
+    'L_0-1':{h:'2',a:'0'},'L_0-2':{h:'1',a:'1'},'L_0-3':{h:'',a:''},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'1'}
+  },
+  'Elodie':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'1',a:'2'},'A_1-3':{h:'1',a:'2'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'2',a:'0'},'B_0-2':{h:'2',a:'1'},'B_0-3':{h:'3',a:'0'},'B_1-2':{h:'0',a:'1'},'B_1-3':{h:'0',a:'1'},'B_2-3':{h:'1',a:'0'},
+    'C_0-1':{h:'3',a:'0'},'C_0-2':{h:'4',a:'0'},'C_0-3':{h:'1',a:'2'},'C_1-2':{h:'2',a:'0'},'C_1-3':{h:'1',a:'0'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'2',a:'1'},'D_0-2':{h:'2',a:'1'},'D_0-3':{h:'1',a:'2'},'D_1-2':{h:'0',a:'1'},'D_1-3':{h:'0',a:'2'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'2',a:'1'},'E_1-2':{h:'0',a:'2'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'2',a:'1'},
+    'F_0-1':{h:'3',a:'0'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'2',a:'0'},'F_1-2':{h:'2',a:'1'},'F_1-3':{h:'1',a:'0'},'F_2-3':{h:'0',a:'2'},
+    'G_0-1':{h:'2',a:'0'},'G_0-2':{h:'1',a:'0'},'G_0-3':{h:'3',a:'1'},'G_1-2':{h:'2',a:'1'},'G_1-3':{h:'0',a:'2'},'G_2-3':{h:'0',a:'1'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'1',a:'0'},'H_1-3':{h:'0',a:'2'},'H_2-3':{h:'2',a:'0'},
+    'I_0-1':{h:'2',a:'0'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'3',a:'0'},'I_1-2':{h:'1',a:'0'},'I_1-3':{h:'0',a:'1'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'3',a:'0'},'J_1-2':{h:'1',a:'1'},'J_1-3':{h:'1',a:'1'},'J_2-3':{h:'0',a:'2'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'1',a:'0'},'K_0-3':{h:'2',a:'1'},'K_1-2':{h:'1',a:'0'},'K_1-3':{h:'0',a:'1'},'K_2-3':{h:'1',a:'2'},
+    'L_0-1':{h:'2',a:'2'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'3',a:'2'},'L_1-2':{h:'0',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'0'}
+  },
+  'Gwendoline':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'2',a:'1'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'1',a:'0'},'A_2-3':{h:'2',a:'1'},
+    'B_0-1':{h:'2',a:'1'},'B_0-2':{h:'2',a:'1'},'B_0-3':{h:'3',a:'0'},'B_1-2':{h:'0',a:'2'},'B_1-3':{h:'',a:''},'B_2-3':{h:'2',a:'0'},
+    'C_0-1':{h:'2',a:'0'},'C_0-2':{h:'2',a:'1'},'C_0-3':{h:'4',a:'0'},'C_1-2':{h:'2',a:'1'},'C_1-3':{h:'2',a:'0'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'2',a:'0'},'D_0-2':{h:'2',a:'1'},'D_0-3':{h:'2',a:'2'},'D_1-2':{h:'0',a:'1'},'D_1-3':{h:'0',a:'2'},'D_2-3':{h:'2',a:'1'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'3',a:'0'},'E_1-2':{h:'0',a:'2'},'E_1-3':{h:'2',a:'0'},'E_2-3':{h:'2',a:'1'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'',a:''},'F_1-2':{h:'2',a:'0'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'1',a:'0'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'1',a:'0'},'G_1-2':{h:'0',a:'2'},'G_1-3':{h:'',a:''},'G_2-3':{h:'0',a:'2'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'',a:''},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'',a:''},'H_2-3':{h:'',a:''},
+    'I_0-1':{h:'2',a:'0'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'3',a:'2'},'I_1-2':{h:'0',a:'0'},'I_1-3':{h:'1',a:'0'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'3',a:'0'},'J_1-2':{h:'0',a:'3'},'J_1-3':{h:'1',a:'0'},'J_2-3':{h:'0',a:'2'},
+    'K_0-1':{h:'1',a:'0'},'K_0-2':{h:'2',a:'0'},'K_0-3':{h:'',a:''},'K_1-2':{h:'0',a:'1'},'K_1-3':{h:'0',a:'1'},'K_2-3':{h:'',a:''},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'2',a:'0'},'L_1-2':{h:'0',a:'1'},'L_1-3':{h:'',a:''},'L_2-3':{h:'',a:''}
+  },
+  'Jean-Louis':{
+    'A_0-1':{h:'3',a:'1'},'A_0-2':{h:'0',a:'0'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'2',a:'1'},
+    'B_0-1':{h:'3',a:'1'},'B_0-2':{h:'2',a:'0'},'B_0-3':{h:'2',a:'2'},'B_1-2':{h:'0',a:'1'},'B_1-3':{h:'4',a:'1'},'B_2-3':{h:'0',a:'1'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'5',a:'1'},'C_0-3':{h:'1',a:'3'},'C_1-2':{h:'0',a:'2'},'C_1-3':{h:'2',a:'0'},'C_2-3':{h:'0',a:'4'},
+    'D_0-1':{h:'1',a:'0'},'D_0-2':{h:'1',a:'2'},'D_0-3':{h:'0',a:'2'},'D_1-2':{h:'0',a:'0'},'D_1-3':{h:'0',a:'2'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'2',a:'0'},'E_1-2':{h:'0',a:'4'},'E_1-3':{h:'1',a:'3'},'E_2-3':{h:'2',a:'1'},
+    'F_0-1':{h:'2',a:'3'},'F_0-2':{h:'2',a:'1'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'',a:''},'F_1-3':{h:'0',a:'2'},'F_2-3':{h:'2',a:'0'},
+    'G_0-1':{h:'2',a:'0'},'G_0-2':{h:'3',a:'0'},'G_0-3':{h:'0',a:'2'},'G_1-2':{h:'1',a:'4'},'G_1-3':{h:'1',a:'0'},'G_2-3':{h:'1',a:'0'},
+    'H_0-1':{h:'6',a:'0'},'H_0-2':{h:'4',a:'0'},'H_0-3':{h:'',a:''},'H_1-2':{h:'4',a:'0'},'H_1-3':{h:'1',a:'3'},'H_2-3':{h:'',a:''},
+    'I_0-1':{h:'3',a:'0'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'2',a:'2'},'I_1-2':{h:'2',a:'0'},'I_1-3':{h:'2',a:'2'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'3',a:'1'},'J_0-2':{h:'3',a:'1'},'J_0-3':{h:'',a:''},'J_1-2':{h:'0',a:'2'},'J_1-3':{h:'2',a:'1'},'J_2-3':{h:'1',a:'0'},
+    'K_0-1':{h:'4',a:'1'},'K_0-2':{h:'3',a:'0'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'0',a:'0'},'K_1-3':{h:'2',a:'2'},'K_2-3':{h:'1',a:'2'},
+    'L_0-1':{h:'3',a:'2'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'0',a:'2'},'L_1-2':{h:'3',a:'1'},'L_1-3':{h:'1',a:'2'},'L_2-3':{h:'3',a:'1'}
+  },
+  'Fred':{
+    'A_0-1':{h:'0',a:'0'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'0',a:'0'},'A_1-2':{h:'1',a:'0'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'1',a:'0'},
+    'B_0-1':{h:'0',a:'0'},'B_0-2':{h:'1',a:'1'},'B_0-3':{h:'2',a:'0'},'B_1-2':{h:'1',a:'3'},'B_1-3':{h:'1',a:'2'},'B_2-3':{h:'1',a:'0'},
+    'C_0-1':{h:'3',a:'1'},'C_0-2':{h:'3',a:'0'},'C_0-3':{h:'0',a:'1'},'C_1-2':{h:'0',a:'0'},'C_1-3':{h:'0',a:'2'},'C_2-3':{h:'0',a:'0'},
+    'D_0-1':{h:'0',a:'0'},'D_0-2':{h:'1',a:'1'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'0',a:'0'},'D_1-3':{h:'2',a:'0'},'D_2-3':{h:'1',a:'2'},
+    'E_0-1':{h:'4',a:'0'},'E_0-2':{h:'1',a:'1'},'E_0-3':{h:'0',a:'1'},'E_1-2':{h:'0',a:'0'},'E_1-3':{h:'2',a:'0'},'E_2-3':{h:'0',a:'0'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'1',a:'0'},'F_0-3':{h:'0',a:'0'},'F_1-2':{h:'1',a:'1'},'F_1-3':{h:'1',a:'1'},'F_2-3':{h:'0',a:'1'},
+    'G_0-1':{h:'1',a:'0'},'G_0-2':{h:'1',a:'0'},'G_0-3':{h:'0',a:'2'},'G_1-2':{h:'0',a:'0'},'G_1-3':{h:'0',a:'0'},'G_2-3':{h:'0',a:'0'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'1',a:'0'},'H_0-3':{h:'1',a:'2'},'H_1-2':{h:'0',a:'0'},'H_1-3':{h:'1',a:'1'},'H_2-3':{h:'0',a:'0'},
+    'I_0-1':{h:'1',a:'0'},'I_0-2':{h:'1',a:'0'},'I_0-3':{h:'0',a:'1'},'I_1-2':{h:'0',a:'1'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'0',a:'0'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'2',a:'0'},'J_1-2':{h:'0',a:'1'},'J_1-3':{h:'0',a:'2'},'J_2-3':{h:'0',a:'2'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'1',a:'0'},'K_0-3':{h:'2',a:'0'},'K_1-2':{h:'0',a:'0'},'K_1-3':{h:'1',a:'0'},'K_2-3':{h:'0',a:'0'},
+    'L_0-1':{h:'2',a:'2'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'0',a:'2'},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'0',a:'1'},'L_2-3':{h:'0',a:'2'}
+  },
+  'Quang Anthony':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'1',a:'1'},'A_0-3':{h:'1',a:'3'},'A_1-2':{h:'0',a:'3'},'A_1-3':{h:'1',a:'0'},'A_2-3':{h:'1',a:'0'},
+    'B_0-1':{h:'2',a:'0'},'B_0-2':{h:'1',a:'1'},'B_0-3':{h:'1',a:'0'},'B_1-2':{h:'1',a:'1'},'B_1-3':{h:'3',a:'0'},'B_2-3':{h:'0',a:'4'},
+    'C_0-1':{h:'3',a:'1'},'C_0-2':{h:'6',a:'0'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'4',a:'0'},'C_1-3':{h:'1',a:'2'},'C_2-3':{h:'0',a:'3'},
+    'D_0-1':{h:'3',a:'0'},'D_0-2':{h:'2',a:'1'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'1',a:'0'},'D_1-3':{h:'1',a:'0'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'5',a:'0'},'E_0-2':{h:'1',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'0',a:'3'},'E_1-3':{h:'3',a:'0'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'3',a:'1'},'F_0-2':{h:'1',a:'1'},'F_0-3':{h:'0',a:'3'},'F_1-2':{h:'1',a:'2'},'F_1-3':{h:'1',a:'0'},'F_2-3':{h:'2',a:'0'},
+    'G_0-1':{h:'3',a:'0'},'G_0-2':{h:'3',a:'0'},'G_0-3':{h:'1',a:'2'},'G_1-2':{h:'1',a:'2'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'1',a:'1'},
+    'H_0-1':{h:'6',a:'0'},'H_0-2':{h:'3',a:'0'},'H_0-3':{h:'3',a:'0'},'H_1-2':{h:'0',a:'3'},'H_1-3':{h:'4',a:'0'},'H_2-3':{h:'0',a:'3'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'4',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'1',a:'2'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'3',a:'1'},'J_0-2':{h:'3',a:'1'},'J_0-3':{h:'0',a:'4'},'J_1-2':{h:'0',a:'1'},'J_1-3':{h:'0',a:'3'},'J_2-3':{h:'0',a:'4'},
+    'K_0-1':{h:'5',a:'0'},'K_0-2':{h:'2',a:'0'},'K_0-3':{h:'0',a:'0'},'K_1-2':{h:'0',a:'3'},'K_1-3':{h:'2',a:'0'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'4',a:'0'},'L_0-3':{h:'0',a:'4'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'5',a:'0'},'L_2-3':{h:'2',a:'0'}
+  },
+  'Vincent':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'1',a:'1'},'A_1-2':{h:'1',a:'1'},'A_1-3':{h:'1',a:'0'},'A_2-3':{h:'1',a:'3'},
+    'B_0-1':{h:'1',a:'1'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'1',a:'0'},'B_1-2':{h:'1',a:'2'},'B_1-3':{h:'1',a:'0'},'B_2-3':{h:'0',a:'1'},
+    'C_0-1':{h:'0',a:'5'},'C_0-2':{h:'6',a:'0'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'0',a:'3'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'4',a:'0'},
+    'D_0-1':{h:'0',a:'1'},'D_0-2':{h:'0',a:'2'},'D_0-3':{h:'1',a:'0'},'D_1-2':{h:'1',a:'1'},'D_1-3':{h:'0',a:'1'},'D_2-3':{h:'1',a:'2'},
+    'E_0-1':{h:'4',a:'0'},'E_0-2':{h:'5',a:'0'},'E_0-3':{h:'0',a:'1'},'E_1-2':{h:'2',a:'2'},'E_1-3':{h:'0',a:'1'},'E_2-3':{h:'0',a:'0'},
+    'F_0-1':{h:'1',a:'0'},'F_0-2':{h:'2',a:'1'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'2',a:'3'},'F_1-3':{h:'1',a:'0'},'F_2-3':{h:'1',a:'1'},
+    'G_0-1':{h:'3',a:'0'},'G_0-2':{h:'4',a:'0'},'G_0-3':{h:'0',a:'3'},'G_1-2':{h:'1',a:'3'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'3',a:'0'},
+    'H_0-1':{h:'5',a:'0'},'H_0-2':{h:'5',a:'0'},'H_0-3':{h:'0',a:'2'},'H_1-2':{h:'0',a:'3'},'H_1-3':{h:'2',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'0'},'I_0-2':{h:'4',a:'0'},'I_0-3':{h:'0',a:'2'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'3',a:'0'},'I_2-3':{h:'0',a:'2'},
+    'J_0-1':{h:'3',a:'1'},'J_0-2':{h:'3',a:'0'},'J_0-3':{h:'3',a:'0'},'J_1-2':{h:'2',a:'0'},'J_1-3':{h:'0',a:'2'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'1'},'K_0-2':{h:'1',a:'4'},'K_0-3':{h:'0',a:'2'},'K_1-2':{h:'0',a:'2'},'K_1-3':{h:'3',a:'2'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'3',a:'1'},'L_0-2':{h:'2',a:'2'},'L_0-3':{h:'0',a:'4'},'L_1-2':{h:'2',a:'2'},'L_1-3':{h:'1',a:'0'},'L_2-3':{h:'2',a:'2'}
+  },
+  'Corinne':{
+    'A_0-1':{h:'1',a:'1'},'A_0-2':{h:'1',a:'0'},'A_0-3':{h:'2',a:'3'},'A_1-2':{h:'0',a:'0'},'A_1-3':{h:'0',a:'1'},'A_2-3':{h:'0',a:'0'},
+    'B_0-1':{h:'2',a:'0'},'B_0-2':{h:'2',a:'2'},'B_0-3':{h:'2',a:'1'},'B_1-2':{h:'0',a:'2'},'B_1-3':{h:'2',a:'1'},'B_2-3':{h:'0',a:'1'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'2',a:'1'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'0',a:'0'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'1',a:'0'},
+    'D_0-1':{h:'2',a:'1'},'D_0-2':{h:'2',a:'2'},'D_0-3':{h:'1',a:'2'},'D_1-2':{h:'1',a:'1'},'D_1-3':{h:'1',a:'1'},'D_2-3':{h:'2',a:'2'},
+    'E_0-1':{h:'2',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'2',a:'2'},'E_1-2':{h:'2',a:'1'},'E_1-3':{h:'1',a:'2'},'E_2-3':{h:'3',a:'0'},
+    'F_0-1':{h:'1',a:'1'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'2',a:'2'},'F_1-2':{h:'1',a:'2'},'F_1-3':{h:'0',a:'0'},'F_2-3':{h:'2',a:'1'},
+    'G_0-1':{h:'3',a:'2'},'G_0-2':{h:'3',a:'3'},'G_0-3':{h:'0',a:'0'},'G_1-2':{h:'2',a:'2'},'G_1-3':{h:'1',a:'2'},'G_2-3':{h:'2',a:'2'},
+    'H_0-1':{h:'2',a:'0'},'H_0-2':{h:'2',a:'1'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'0',a:'0'},'H_1-3':{h:'1',a:'1'},'H_2-3':{h:'3',a:'4'},
+    'I_0-1':{h:'1',a:'1'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'1',a:'1'},'I_1-2':{h:'0',a:'0'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'2',a:'0'},
+    'J_0-1':{h:'2',a:'2'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'1',a:'2'},'J_1-2':{h:'2',a:'3'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'1',a:'2'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'1',a:'1'},'K_0-3':{h:'3',a:'3'},'K_1-2':{h:'3',a:'2'},'K_1-3':{h:'1',a:'1'},'K_2-3':{h:'3',a:'2'},
+    'L_0-1':{h:'2',a:'3'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'0',a:'3'},'L_1-2':{h:'3',a:'0'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'3',a:'0'}
+  },
+  'Mathis':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'1',a:'2'},'A_1-2':{h:'2',a:'0'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'2',a:'1'},'B_0-2':{h:'1',a:'2'},'B_0-3':{h:'1',a:'1'},'B_1-2':{h:'8',a:'0'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'2',a:'0'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'3',a:'0'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'2',a:'0'},'C_1-3':{h:'1',a:'1'},'C_2-3':{h:'0',a:'1'},
+    'D_0-1':{h:'2',a:'1'},'D_0-2':{h:'2',a:'0'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'2',a:'0'},'D_1-3':{h:'1',a:'1'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'1',a:'1'},'E_1-3':{h:'0',a:'1'},'E_2-3':{h:'2',a:'1'},
+    'F_0-1':{h:'1',a:'1'},'F_0-2':{h:'3',a:'1'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'1',a:'0'},'F_1-3':{h:'1',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'1',a:'1'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'2',a:'0'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'1',a:'0'},
+    'H_0-1':{h:'2',a:'0'},'H_0-2':{h:'3',a:'0'},'H_0-3':{h:'1',a:'2'},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'1',a:'2'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'1',a:'2'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'0',a:'2'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'2',a:'1'},'K_0-3':{h:'1',a:'1'},'K_1-2':{h:'2',a:'1'},'K_1-3':{h:'0',a:'1'},'K_2-3':{h:'1',a:'1'},
+    'L_0-1':{h:'1',a:'1'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'0',a:'3'},'L_1-2':{h:'2',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'1',a:'1'}
+  },
+  'Gilbert':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'1',a:'0'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'0',a:'0'},'A_1-3':{h:'1',a:'0'},'A_2-3':{h:'0',a:'1'},
+    'B_0-1':{h:'1',a:'0'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'4',a:'0'},'B_1-2':{h:'2',a:'0'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'2',a:'2'},'C_0-2':{h:'4',a:'0'},'C_0-3':{h:'1',a:'3'},'C_1-2':{h:'1',a:'2'},'C_1-3':{h:'1',a:'3'},'C_2-3':{h:'3',a:'0'},
+    'D_0-1':{h:'2',a:'0'},'D_0-2':{h:'1',a:'0'},'D_0-3':{h:'2',a:'0'},'D_1-2':{h:'0',a:'0'},'D_1-3':{h:'1',a:'0'},'D_2-3':{h:'0',a:'2'},
+    'E_0-1':{h:'4',a:'0'},'E_0-2':{h:'1',a:'0'},'E_0-3':{h:'0',a:'2'},'E_1-2':{h:'2',a:'1'},'E_1-3':{h:'2',a:'1'},'E_2-3':{h:'1',a:'2'},
+    'F_0-1':{h:'0',a:'0'},'F_0-2':{h:'1',a:'1'},'F_0-3':{h:'0',a:'3'},'F_1-2':{h:'1',a:'1'},'F_1-3':{h:'0',a:'2'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'2',a:'0'},'G_0-2':{h:'3',a:'0'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'1',a:'1'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'2',a:'1'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'4',a:'1'},'H_0-3':{h:'3',a:'0'},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'3',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'3',a:'1'},'I_0-3':{h:'1',a:'1'},'I_1-2':{h:'0',a:'2'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'0',a:'2'},
+    'J_0-1':{h:'3',a:'0'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'2',a:'1'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'0'},'K_0-2':{h:'0',a:'2'},'K_0-3':{h:'0',a:'1'},'K_1-2':{h:'2',a:'0'},'K_1-3':{h:'0',a:'2'},'K_2-3':{h:'1',a:'0'},
+    'L_0-1':{h:'1',a:'1'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'0',a:'1'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'0',a:'3'},'L_2-3':{h:'2',a:'0'}
+  },
+  'Laurent':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'0'},'A_0-3':{h:'0',a:'1'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'0',a:'1'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'',a:''},'B_0-2':{h:'',a:''},'B_0-3':{h:'',a:''},'B_1-2':{h:'',a:''},'B_1-3':{h:'',a:''},'B_2-3':{h:'',a:''},
+    'C_0-1':{h:'1',a:'0'},'C_0-2':{h:'3',a:'1'},'C_0-3':{h:'1',a:'1'},'C_1-2':{h:'0',a:'2'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'2',a:'0'},
+    'D_0-1':{h:'0',a:'0'},'D_0-2':{h:'3',a:'0'},'D_0-3':{h:'2',a:'2'},'D_1-2':{h:'1',a:'2'},'D_1-3':{h:'2',a:'2'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'2',a:'1'},'E_0-2':{h:'3',a:'0'},'E_0-3':{h:'1',a:'1'},'E_1-2':{h:'0',a:'2'},'E_1-3':{h:'1',a:'0'},'E_2-3':{h:'0',a:'0'},
+    'F_0-1':{h:'0',a:'1'},'F_0-2':{h:'1',a:'2'},'F_0-3':{h:'1',a:'0'},'F_1-2':{h:'2',a:'0'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'2',a:'0'},
+    'G_0-1':{h:'2',a:'0'},'G_0-2':{h:'2',a:'1'},'G_0-3':{h:'1',a:'3'},'G_1-2':{h:'1',a:'1'},'G_1-3':{h:'1',a:'1'},'G_2-3':{h:'0',a:'0'},
+    'H_0-1':{h:'1',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'1',a:'1'},'H_1-2':{h:'0',a:'1'},'H_1-3':{h:'1',a:'1'},'H_2-3':{h:'0',a:'1'},
+    'I_0-1':{h:'1',a:'0'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'0',a:'3'},'I_1-2':{h:'0',a:'1'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'0',a:'1'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'3',a:'0'},'J_0-3':{h:'1',a:'3'},'J_1-2':{h:'1',a:'2'},'J_1-3':{h:'0',a:'2'},'J_2-3':{h:'1',a:'3'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'1',a:'2'},'K_0-3':{h:'1',a:'3'},'K_1-2':{h:'6',a:'1'},'K_1-3':{h:'1',a:'3'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'2',a:'0'},'L_0-2':{h:'1',a:'1'},'L_0-3':{h:'0',a:'3'},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'2',a:'3'},'L_2-3':{h:'1',a:'1'}
+  },
+  'Juan':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'2',a:'2'},'A_0-3':{h:'1',a:'2'},'A_1-2':{h:'2',a:'2'},'A_1-3':{h:'2',a:'1'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'1',a:'1'},'B_0-2':{h:'2',a:'0'},'B_0-3':{h:'1',a:'1'},'B_1-2':{h:'2',a:'2'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'1',a:'1'},
+    'C_0-1':{h:'1',a:'1'},'C_0-2':{h:'3',a:'0'},'C_0-3':{h:'1',a:'2'},'C_1-2':{h:'3',a:'1'},'C_1-3':{h:'1',a:'2'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'1',a:'1'},'D_0-2':{h:'2',a:'2'},'D_0-3':{h:'1',a:'2'},'D_1-2':{h:'1',a:'0'},'D_1-3':{h:'1',a:'0'},'D_2-3':{h:'1',a:'0'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'2',a:'1'},'E_1-3':{h:'6',a:'3'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'2',a:'1'},'F_0-3':{h:'1',a:'2'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'2'},
+    'G_0-1':{h:'2',a:'2'},'G_0-2':{h:'3',a:'1'},'G_0-3':{h:'0',a:'3'},'G_1-2':{h:'1',a:'0'},'G_1-3':{h:'1',a:'3'},'G_2-3':{h:'2',a:'0'},
+    'H_0-1':{h:'4',a:'0'},'H_0-2':{h:'3',a:'0'},'H_0-3':{h:'1',a:'2'},'H_1-2':{h:'0',a:'1'},'H_1-3':{h:'2',a:'1'},'H_2-3':{h:'2',a:'1'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'2',a:'1'},
+    'J_0-1':{h:'2',a:'2'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'0',a:'2'},'J_1-3':{h:'0',a:'2'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'0'},'K_0-2':{h:'1',a:'2'},'K_0-3':{h:'1',a:'1'},'K_1-2':{h:'2',a:'1'},'K_1-3':{h:'1',a:'1'},'K_2-3':{h:'1',a:'1'},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'0',a:'3'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'2'}
+  },
+  'Gautier':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'2'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'0',a:'0'},'A_2-3':{h:'1',a:'0'},
+    'B_0-1':{h:'0',a:'1'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'2',a:'0'},'B_1-2':{h:'1',a:'0'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'1',a:'2'},'C_0-2':{h:'2',a:'0'},'C_0-3':{h:'0',a:'3'},'C_1-2':{h:'3',a:'0'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'1',a:'0'},'D_0-2':{h:'2',a:'0'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'2',a:'0'},'D_1-3':{h:'2',a:'0'},'D_2-3':{h:'2',a:'0'},
+    'E_0-1':{h:'4',a:'0'},'E_0-2':{h:'1',a:'0'},'E_0-3':{h:'0',a:'2'},'E_1-2':{h:'2',a:'2'},'E_1-3':{h:'0',a:'1'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'0',a:'0'},'F_0-2':{h:'1',a:'0'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'1',a:'2'},'F_1-3':{h:'1',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'2',a:'0'},'G_0-2':{h:'3',a:'0'},'G_0-3':{h:'0',a:'3'},'G_1-2':{h:'1',a:'2'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'2',a:'0'},
+    'H_0-1':{h:'4',a:'0'},'H_0-2':{h:'4',a:'0'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'3',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'3',a:'1'},'I_0-2':{h:'6',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'0',a:'2'},'I_1-3':{h:'0',a:'3'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'0',a:'3'},'J_1-3':{h:'0',a:'3'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'0',a:'0'},'K_0-3':{h:'1',a:'1'},'K_1-2':{h:'0',a:'1'},'K_1-3':{h:'0',a:'1'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'1',a:'0'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'0',a:'2'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'1'}
+  },
+  'Imbert':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'1',a:'2'},'A_1-2':{h:'2',a:'1'},'A_1-3':{h:'1',a:'2'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'1',a:'1'},'B_0-2':{h:'2',a:'1'},'B_0-3':{h:'2',a:'2'},'B_1-2':{h:'2',a:'1'},'B_1-3':{h:'0',a:'2'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'4',a:'0'},'C_0-3':{h:'3',a:'1'},'C_1-2':{h:'1',a:'1'},'C_1-3':{h:'1',a:'1'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'2',a:'1'},'D_0-2':{h:'2',a:'0'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'1',a:'0'},'D_1-3':{h:'1',a:'0'},'D_2-3':{h:'1',a:'2'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'1',a:'1'},'E_1-2':{h:'2',a:'1'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'2',a:'2'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'1',a:'2'},'F_2-3':{h:'2',a:'0'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'0',a:'3'},'G_1-2':{h:'1',a:'2'},'G_1-3':{h:'1',a:'0'},'G_2-3':{h:'0',a:'3'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'3',a:'1'},'H_1-2':{h:'3',a:'1'},'H_1-3':{h:'0',a:'2'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'1',a:'2'},'I_2-3':{h:'0',a:'2'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'3',a:'0'},'J_1-3':{h:'0',a:'2'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'0'},'K_0-2':{h:'0',a:'2'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'2',a:'1'},'K_1-3':{h:'0',a:'2'},'K_2-3':{h:'1',a:'0'},
+    'L_0-1':{h:'2',a:'0'},'L_0-2':{h:'3',a:'1'},'L_0-3':{h:'0',a:'2'},'L_1-2':{h:'2',a:'1'},'L_1-3':{h:'0',a:'1'},'L_2-3':{h:'1',a:'1'}
+  },
+  'Marc':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'3',a:'1'},'A_0-3':{h:'2',a:'0'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'3',a:'2'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'0',a:'1'},'B_0-2':{h:'0',a:'4'},'B_0-3':{h:'4',a:'4'},'B_1-2':{h:'0',a:'1'},'B_1-3':{h:'1',a:'2'},'B_2-3':{h:'0',a:'0'},
+    'C_0-1':{h:'3',a:'0'},'C_0-2':{h:'2',a:'0'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'0',a:'5'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'0',a:'1'},
+    'D_0-1':{h:'0',a:'1'},'D_0-2':{h:'0',a:'2'},'D_0-3':{h:'2',a:'1'},'D_1-2':{h:'2',a:'0'},'D_1-3':{h:'1',a:'0'},'D_2-3':{h:'2',a:'1'},
+    'E_0-1':{h:'3',a:'1'},'E_0-2':{h:'4',a:'0'},'E_0-3':{h:'0',a:'1'},'E_1-2':{h:'1',a:'2'},'E_1-3':{h:'1',a:'2'},'E_2-3':{h:'1',a:'1'},
+    'F_0-1':{h:'2',a:'0'},'F_0-2':{h:'1',a:'2'},'F_0-3':{h:'3',a:'2'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'3'},
+    'G_0-1':{h:'3',a:'1'},'G_0-2':{h:'3',a:'1'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'0',a:'1'},'G_1-3':{h:'0',a:'3'},'G_2-3':{h:'0',a:'2'},
+    'H_0-1':{h:'4',a:'0'},'H_0-2':{h:'1',a:'2'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'0',a:'0'},'H_1-3':{h:'2',a:'0'},'H_2-3':{h:'0',a:'1'},
+    'I_0-1':{h:'1',a:'3'},'I_0-2':{h:'0',a:'2'},'I_0-3':{h:'1',a:'0'},'I_1-2':{h:'0',a:'4'},'I_1-3':{h:'0',a:'1'},'I_2-3':{h:'3',a:'1'},
+    'J_0-1':{h:'0',a:'0'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'1',a:'45'},'J_1-2':{h:'4',a:'0'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'1',a:'2'},
+    'K_0-1':{h:'3',a:'2'},'K_0-2':{h:'1',a:'2'},'K_0-3':{h:'0',a:'2'},'K_1-2':{h:'0',a:'3'},'K_1-3':{h:'3',a:'2'},'K_2-3':{h:'2',a:'1'},
+    'L_0-1':{h:'4',a:'2'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'0',a:'4'},'L_1-2':{h:'0',a:'1'},'L_1-3':{h:'0',a:'1'},'L_2-3':{h:'1',a:'1'}
+  },
+  'Thierry':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'0',a:'0'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'1',a:'2'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'1',a:'1'},'B_0-2':{h:'1',a:'2'},'B_0-3':{h:'3',a:'0'},'B_1-2':{h:'',a:''},'B_1-3':{h:'',a:''},'B_2-3':{h:'2',a:'0'},
+    'C_0-1':{h:'2',a:'2'},'C_0-2':{h:'5',a:'0'},'C_0-3':{h:'1',a:'3'},'C_1-2':{h:'4',a:'0'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'2',a:'2'},'D_0-2':{h:'2',a:'1'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'1',a:'0'},'D_1-3':{h:'2',a:'2'},'D_2-3':{h:'2',a:'2'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'0'},'E_0-3':{h:'1',a:'3'},'E_1-2':{h:'2',a:'2'},'E_1-3':{h:'0',a:'1'},'E_2-3':{h:'1',a:'3'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'2',a:'2'},'F_0-3':{h:'1',a:'2'},'F_1-2':{h:'1',a:'2'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'2',a:'0'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'0',a:'1'},'G_1-3':{h:'0',a:'2'},'G_2-3':{h:'2',a:'0'},
+    'H_0-1':{h:'2',a:'0'},'H_0-2':{h:'3',a:'1'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'2',a:'0'},'H_1-3':{h:'2',a:'0'},'H_2-3':{h:'3',a:'2'},
+    'I_0-1':{h:'3',a:'1'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'1',a:'2'},'I_1-3':{h:'1',a:'3'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'1',a:'3'},'J_1-2':{h:'1',a:'2'},'J_1-3':{h:'1',a:'3'},'J_2-3':{h:'1',a:'3'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'1',a:'2'},'K_0-3':{h:'2',a:'3'},'K_1-2':{h:'2',a:'0'},'K_1-3':{h:'0',a:'2'},'K_2-3':{h:'0',a:'2'},
+    'L_0-1':{h:'1',a:'1'},'L_0-2':{h:'1',a:'1'},'L_0-3':{h:'0',a:'2'},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'1'}
+  },
+  'Korantin':{
+    'A_0-1':{h:'2',a:'0'},'A_0-2':{h:'4',a:'0'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'1',a:'0'},'A_1-3':{h:'1',a:'0'},'A_2-3':{h:'1',a:'0'},
+    'B_0-1':{h:'2',a:'0'},'B_0-2':{h:'2',a:'1'},'B_0-3':{h:'1',a:'2'},'B_1-2':{h:'0',a:'1'},'B_1-3':{h:'0',a:'1'},'B_2-3':{h:'0',a:'4'},
+    'C_0-1':{h:'1',a:'2'},'C_0-2':{h:'2',a:'0'},'C_0-3':{h:'1',a:'2'},'C_1-2':{h:'0',a:'2'},'C_1-3':{h:'6',a:'1'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'2',a:'0'},'D_0-2':{h:'0',a:'2'},'D_0-3':{h:'1',a:'0'},'D_1-2':{h:'1',a:'0'},'D_1-3':{h:'2',a:'1'},'D_2-3':{h:'0',a:'0'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'1',a:'1'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'0',a:'2'},
+    'F_0-1':{h:'1',a:'0'},'F_0-2':{h:'1',a:'1'},'F_0-3':{h:'0',a:'1'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'2'},
+    'G_0-1':{h:'1',a:'0'},'G_0-2':{h:'2',a:'1'},'G_0-3':{h:'0',a:'2'},'G_1-2':{h:'1',a:'0'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'6',a:'0'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'0',a:'1'},'H_1-3':{h:'0',a:'1'},'H_2-3':{h:'1',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'1',a:'2'},'I_1-2':{h:'0',a:'1'},'I_1-3':{h:'0',a:'1'},'I_2-3':{h:'2',a:'0'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'1',a:'0'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'0',a:'2'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'2',a:'1'},'K_1-3':{h:'0',a:'2'},'K_2-3':{h:'1',a:'2'},
+    'L_0-1':{h:'4',a:'1'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'2',a:'0'},'L_1-2':{h:'2',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'0'}
+  },
+  'Marco':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'1'},'A_0-3':{h:'0',a:'1'},'A_1-2':{h:'1',a:'1'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'1',a:'1'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'2',a:'0'},'B_1-2':{h:'2',a:'0'},'B_1-3':{h:'1',a:'0'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'2',a:'0'},'C_0-3':{h:'1',a:'2'},'C_1-2':{h:'2',a:'0'},'C_1-3':{h:'1',a:'2'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'1',a:'1'},'D_0-2':{h:'1',a:'0'},'D_0-3':{h:'2',a:'1'},'D_1-2':{h:'0',a:'1'},'D_1-3':{h:'1',a:'0'},'D_2-3':{h:'1',a:'0'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'2',a:'1'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'0',a:'1'},
+    'F_0-1':{h:'1',a:'0'},'F_0-2':{h:'2',a:'1'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'2'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'1',a:'0'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'2',a:'0'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'2',a:'0'},'H_1-3':{h:'2',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'0',a:'1'},'I_0-2':{h:'4',a:'0'},'I_0-3':{h:'1',a:'1'},'I_1-2':{h:'2',a:'1'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'2',a:'1'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'2'},'J_1-2':{h:'1',a:'0'},'J_1-3':{h:'1',a:'1'},'J_2-3':{h:'0',a:'2'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'2',a:'1'},'K_0-3':{h:'1',a:'1'},'K_1-2':{h:'2',a:'1'},'K_1-3':{h:'0',a:'1'},'K_2-3':{h:'1',a:'1'},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'1',a:'0'},'L_0-3':{h:'1',a:'2'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'0',a:'1'},'L_2-3':{h:'2',a:'0'}
+  },
+  'Thibaud':{
+    'A_0-1':{h:'1',a:'0'},'A_0-2':{h:'1',a:'0'},'A_0-3':{h:'0',a:'1'},'A_1-2':{h:'1',a:'1'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'0',a:'0'},
+    'B_0-1':{h:'1',a:'0'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'1',a:'0'},'B_1-2':{h:'1',a:'0'},'B_1-3':{h:'1',a:'0'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'1',a:'1'},'C_0-2':{h:'2',a:'0'},'C_0-3':{h:'0',a:'1'},'C_1-2':{h:'0',a:'1'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'2',a:'0'},
+    'D_0-1':{h:'1',a:'0'},'D_0-2':{h:'1',a:'0'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'2',a:'1'},'D_1-3':{h:'0',a:'0'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'0',a:'1'},'E_1-2':{h:'1',a:'0'},'E_1-3':{h:'0',a:'0'},'E_2-3':{h:'0',a:'2'},
+    'F_0-1':{h:'1',a:'0'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'0',a:'2'},'F_1-2':{h:'1',a:'1'},'F_1-3':{h:'1',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'1',a:'0'},'G_0-2':{h:'1',a:'0'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'1',a:'0'},'G_1-3':{h:'0',a:'0'},'G_2-3':{h:'2',a:'0'},
+    'H_0-1':{h:'3',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'1',a:'2'},'H_1-2':{h:'0',a:'1'},'H_1-3':{h:'1',a:'1'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'0',a:'1'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'1',a:'1'},'I_2-3':{h:'0',a:'1'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'2'},'J_1-2':{h:'0',a:'1'},'J_1-3':{h:'1',a:'2'},'J_2-3':{h:'0',a:'2'},
+    'K_0-1':{h:'2',a:'0'},'K_0-2':{h:'1',a:'0'},'K_0-3':{h:'1',a:'3'},'K_1-2':{h:'1',a:'1'},'K_1-3':{h:'0',a:'1'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'2',a:'0'},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'1'}
+  },
+  'QGTI':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'1',a:'0'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'1',a:'0'},'A_1-3':{h:'0',a:'1'},'A_2-3':{h:'1',a:'0'},
+    'B_0-1':{h:'1',a:'0'},'B_0-2':{h:'2',a:'1'},'B_0-3':{h:'2',a:'1'},'B_1-2':{h:'1',a:'1'},'B_1-3':{h:'0',a:'1'},'B_2-3':{h:'0',a:'1'},
+    'C_0-1':{h:'1',a:'2'},'C_0-2':{h:'4',a:'0'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'0',a:'1'},'C_1-3':{h:'1',a:'0'},'C_2-3':{h:'0',a:'1'},
+    'D_0-1':{h:'0',a:'0'},'D_0-2':{h:'1',a:'1'},'D_0-3':{h:'1',a:'0'},'D_1-2':{h:'2',a:'1'},'D_1-3':{h:'0',a:'0'},'D_2-3':{h:'0',a:'2'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'3',a:'2'},'E_0-3':{h:'0',a:'3'},'E_1-2':{h:'2',a:'1'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'0',a:'2'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'1',a:'2'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'3',a:'0'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'1',a:'2'},'G_1-2':{h:'1',a:'0'},'G_1-3':{h:'0',a:'1'},'G_2-3':{h:'1',a:'0'},
+    'H_0-1':{h:'5',a:'0'},'H_0-2':{h:'3',a:'0'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'1',a:'2'},'H_1-3':{h:'1',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'0',a:'2'},'I_1-2':{h:'1',a:'2'},'I_1-3':{h:'0',a:'1'},'I_2-3':{h:'0',a:'1'},
+    'J_0-1':{h:'3',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'5'},'J_1-2':{h:'0',a:'3'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'1'},'K_0-2':{h:'1',a:'1'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'1',a:'0'},'K_1-3':{h:'1',a:'2'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'2',a:'2'},'L_0-2':{h:'3',a:'1'},'L_0-3':{h:'1',a:'2'},'L_1-2':{h:'2',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'1',a:'2'}
+  },
+  'Victor':{
+    'A_0-1':{h:'1',a:'0'},'A_0-2':{h:'3',a:'2'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'2',a:'1'},'A_1-3':{h:'1',a:'2'},'A_2-3':{h:'2',a:'2'},
+    'B_0-1':{h:'2',a:'0'},'B_0-2':{h:'2',a:'1'},'B_0-3':{h:'4',a:'2'},'B_1-2':{h:'1',a:'3'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'1',a:'1'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'4',a:'1'},'C_0-3':{h:'1',a:'2'},'C_1-2':{h:'0',a:'3'},'C_1-3':{h:'1',a:'2'},'C_2-3':{h:'2',a:'0'},
+    'D_0-1':{h:'1',a:'0'},'D_0-2':{h:'2',a:'1'},'D_0-3':{h:'2',a:'1'},'D_1-2':{h:'3',a:'1'},'D_1-3':{h:'1',a:'3'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'5',a:'0'},'E_0-2':{h:'1',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'1',a:'1'},'E_1-3':{h:'3',a:'0'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'2',a:'2'},'F_0-2':{h:'2',a:'1'},'F_0-3':{h:'1',a:'3'},'F_1-2':{h:'0',a:'3'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'4',a:'1'},'G_0-3':{h:'1',a:'3'},'G_1-2':{h:'3',a:'0'},'G_1-3':{h:'1',a:'3'},'G_2-3':{h:'0',a:'2'},
+    'H_0-1':{h:'6',a:'0'},'H_0-2':{h:'3',a:'1'},'H_0-3':{h:'4',a:'0'},'H_1-2':{h:'2',a:'3'},'H_1-3':{h:'4',a:'0'},'H_2-3':{h:'0',a:'3'},
+    'I_0-1':{h:'3',a:'1'},'I_0-2':{h:'4',a:'0'},'I_0-3':{h:'0',a:'4'},'I_1-2':{h:'1',a:'2'},'I_1-3':{h:'0',a:'4'},'I_2-3':{h:'0',a:'2'},
+    'J_0-1':{h:'3',a:'0'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'0',a:'4'},'J_1-2':{h:'0',a:'4'},'J_1-3':{h:'0',a:'4'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'4',a:'0'},'K_0-2':{h:'0',a:'3'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'2',a:'0'},'K_1-3':{h:'0',a:'3'},'K_2-3':{h:'5',a:'0'},
+    'L_0-1':{h:'3',a:'1'},'L_0-2':{h:'4',a:'1'},'L_0-3':{h:'0',a:'4'},'L_1-2':{h:'2',a:'0'},'L_1-3':{h:'5',a:'0'},'L_2-3':{h:'2',a:'1'}
+  },
+  'RBD':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'2'},'A_0-3':{h:'0',a:'2'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'3',a:'0'},'A_2-3':{h:'1',a:'1'},
+    'B_0-1':{h:'2',a:'0'},'B_0-2':{h:'2',a:'0'},'B_0-3':{h:'1',a:'1'},'B_1-2':{h:'3',a:'0'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'0',a:'3'},
+    'C_0-1':{h:'1',a:'2'},'C_0-2':{h:'4',a:'0'},'C_0-3':{h:'1',a:'3'},'C_1-2':{h:'0',a:'3'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'3',a:'0'},
+    'D_0-1':{h:'0',a:'1'},'D_0-2':{h:'1',a:'0'},'D_0-3':{h:'1',a:'1'},'D_1-2':{h:'0',a:'0'},'D_1-3':{h:'2',a:'1'},'D_2-3':{h:'0',a:'0'},
+    'E_0-1':{h:'5',a:'0'},'E_0-2':{h:'1',a:'2'},'E_0-3':{h:'0',a:'3'},'E_1-2':{h:'1',a:'2'},'E_1-3':{h:'3',a:'0'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'2',a:'1'},'F_0-2':{h:'1',a:'1'},'F_0-3':{h:'0',a:'4'},'F_1-2':{h:'3',a:'1'},'F_1-3':{h:'0',a:'2'},'F_2-3':{h:'2',a:'0'},
+    'G_0-1':{h:'1',a:'1'},'G_0-2':{h:'3',a:'0'},'G_0-3':{h:'0',a:'2'},'G_1-2':{h:'0',a:'1'},'G_1-3':{h:'0',a:'3'},'G_2-3':{h:'0',a:'1'},
+    'H_0-1':{h:'5',a:'0'},'H_0-2':{h:'3',a:'0'},'H_0-3':{h:'3',a:'0'},'H_1-2':{h:'1',a:'1'},'H_1-3':{h:'3',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'1',a:'2'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'0',a:'1'},'I_1-2':{h:'0',a:'2'},'I_1-3':{h:'0',a:'1'},'I_2-3':{h:'3',a:'0'},
+    'J_0-1':{h:'0',a:'1'},'J_0-2':{h:'3',a:'0'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'0',a:'4'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'1'},'K_0-2':{h:'0',a:'2'},'K_0-3':{h:'2',a:'2'},'K_1-2':{h:'1',a:'0'},'K_1-3':{h:'2',a:'2'},'K_2-3':{h:'0',a:'4'},
+    'L_0-1':{h:'3',a:'1'},'L_0-2':{h:'1',a:'1'},'L_0-3':{h:'0',a:'4'},'L_1-2':{h:'2',a:'1'},'L_1-3':{h:'0',a:'4'},'L_2-3':{h:'2',a:'0'}
+  },
+  'MBD':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'2',a:'0'},'A_0-3':{h:'1',a:'1'},'A_1-2':{h:'1',a:'0'},'A_1-3':{h:'1',a:'2'},'A_2-3':{h:'3',a:'0'},
+    'B_0-1':{h:'1',a:'0'},'B_0-2':{h:'2',a:'0'},'B_0-3':{h:'1',a:'1'},'B_1-2':{h:'0',a:'2'},'B_1-3':{h:'1',a:'1'},'B_2-3':{h:'0',a:'2'},
+    'C_0-1':{h:'2',a:'0'},'C_0-2':{h:'4',a:'0'},'C_0-3':{h:'0',a:'2'},'C_1-2':{h:'0',a:'1'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'3',a:'0'},
+    'D_0-1':{h:'2',a:'0'},'D_0-2':{h:'1',a:'1'},'D_0-3':{h:'1',a:'2'},'D_1-2':{h:'2',a:'0'},'D_1-3':{h:'1',a:'1'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'2',a:'0'},'E_0-2':{h:'2',a:'1'},'E_0-3':{h:'1',a:'3'},'E_1-2':{h:'1',a:'2'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'0',a:'2'},
+    'F_0-1':{h:'1',a:'1'},'F_0-2':{h:'2',a:'1'},'F_0-3':{h:'1',a:'2'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'2'},
+    'G_0-1':{h:'2',a:'1'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'0',a:'2'},'G_1-2':{h:'1',a:'1'},'G_1-3':{h:'1',a:'1'},'G_2-3':{h:'0',a:'2'},
+    'H_0-1':{h:'4',a:'0'},'H_0-2':{h:'2',a:'0'},'H_0-3':{h:'1',a:'2'},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'3',a:'0'},'H_2-3':{h:'0',a:'2'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'0',a:'2'},'I_1-2':{h:'1',a:'3'},'I_1-3':{h:'0',a:'2'},'I_2-3':{h:'0',a:'2'},
+    'J_0-1':{h:'2',a:'0'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'0',a:'3'},'J_1-2':{h:'1',a:'2'},'J_1-3':{h:'0',a:'2'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'0'},'K_0-2':{h:'0',a:'3'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'2',a:'0'},'K_1-3':{h:'0',a:'2'},'K_2-3':{h:'0',a:'3'},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'0',a:'3'},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'2',a:'1'}
+  },
+  'Claude':{
+    'A_0-1':{h:'3',a:'2'},'A_0-2':{h:'1',a:'1'},'A_0-3':{h:'2',a:'3'},'A_1-2':{h:'2',a:'1'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'2',a:'2'},
+    'B_0-1':{h:'3',a:'2'},'B_0-2':{h:'2',a:'2'},'B_0-3':{h:'1',a:'2'},'B_1-2':{h:'0',a:'3'},'B_1-3':{h:'1',a:'2'},'B_2-3':{h:'1',a:'0'},
+    'C_0-1':{h:'2',a:'1'},'C_0-2':{h:'2',a:'1'},'C_0-3':{h:'1',a:'2'},'C_1-2':{h:'0',a:'1'},'C_1-3':{h:'1',a:'2'},'C_2-3':{h:'1',a:'0'},
+    'D_0-1':{h:'2',a:'1'},'D_0-2':{h:'1',a:'1'},'D_0-3':{h:'1',a:'2'},'D_1-2':{h:'2',a:'0'},'D_1-3':{h:'1',a:'1'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'3',a:'1'},'E_0-2':{h:'2',a:'0'},'E_0-3':{h:'2',a:'1'},'E_1-2':{h:'1',a:'2'},'E_1-3':{h:'0',a:'1'},'E_2-3':{h:'2',a:'1'},
+    'F_0-1':{h:'1',a:'0'},'F_0-2':{h:'2',a:'0'},'F_0-3':{h:'2',a:'1'},'F_1-2':{h:'1',a:'1'},'F_1-3':{h:'1',a:'2'},'F_2-3':{h:'2',a:'1'},
+    'G_0-1':{h:'1',a:'0'},'G_0-2':{h:'1',a:'0'},'G_0-3':{h:'0',a:'1'},'G_1-2':{h:'1',a:'1'},'G_1-3':{h:'1',a:'0'},'G_2-3':{h:'1',a:'1'},
+    'H_0-1':{h:'2',a:'1'},'H_0-2':{h:'2',a:'1'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'0',a:'1'},'H_1-3':{h:'1',a:'1'},'H_2-3':{h:'1',a:'2'},
+    'I_0-1':{h:'3',a:'1'},'I_0-2':{h:'2',a:'0'},'I_0-3':{h:'2',a:'1'},'I_1-2':{h:'1',a:'0'},'I_1-3':{h:'1',a:'2'},'I_2-3':{h:'2',a:'1'},
+    'J_0-1':{h:'2',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'2',a:'1'},'J_1-2':{h:'2',a:'0'},'J_1-3':{h:'1',a:'2'},'J_2-3':{h:'1',a:'2'},
+    'K_0-1':{h:'2',a:'1'},'K_0-2':{h:'1',a:'2'},'K_0-3':{h:'3',a:'1'},'K_1-2':{h:'2',a:'1'},'K_1-3':{h:'0',a:'3'},'K_2-3':{h:'1',a:'2'},
+    'L_0-1':{h:'2',a:'1'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'2',a:'1'},'L_1-2':{h:'1',a:'1'},'L_1-3':{h:'1',a:'2'},'L_2-3':{h:'1',a:'1'}
+  },
+  'Emmanuel':{
+    'A_0-1':{h:'3',a:'1'},'A_0-2':{h:'4',a:'2'},'A_0-3':{h:'1',a:'4'},'A_1-2':{h:'2',a:'2'},'A_1-3':{h:'1',a:'1'},'A_2-3':{h:'2',a:'2'},
+    'B_0-1':{h:'2',a:'1'},'B_0-2':{h:'1',a:'1'},'B_0-3':{h:'2',a:'1'},'B_1-2':{h:'0',a:'2'},'B_1-3':{h:'1',a:'2'},'B_2-3':{h:'2',a:'0'},
+    'C_0-1':{h:'1',a:'2'},'C_0-2':{h:'3',a:'1'},'C_0-3':{h:'1',a:'1'},'C_1-2':{h:'4',a:'0'},'C_1-3':{h:'1',a:'3'},'C_2-3':{h:'0',a:'2'},
+    'D_0-1':{h:'1',a:'3'},'D_0-2':{h:'2',a:'2'},'D_0-3':{h:'3',a:'1'},'D_1-2':{h:'1',a:'1'},'D_1-3':{h:'2',a:'2'},'D_2-3':{h:'1',a:'1'},
+    'E_0-1':{h:'4',a:'0'},'E_0-2':{h:'2',a:'0'},'E_0-3':{h:'1',a:'3'},'E_1-2':{h:'2',a:'2'},'E_1-3':{h:'2',a:'0'},'E_2-3':{h:'0',a:'3'},
+    'F_0-1':{h:'1',a:'1'},'F_0-2':{h:'1',a:'1'},'F_0-3':{h:'0',a:'1'},'F_1-2':{h:'2',a:'2'},'F_1-3':{h:'1',a:'2'},'F_2-3':{h:'2',a:'2'},
+    'G_0-1':{h:'4',a:'1'},'G_0-2':{h:'1',a:'1'},'G_0-3':{h:'0',a:'2'},'G_1-2':{h:'2',a:'2'},'G_1-3':{h:'0',a:'2'},'G_2-3':{h:'2',a:'2'},
+    'H_0-1':{h:'3',a:'1'},'H_0-2':{h:'3',a:'0'},'H_0-3':{h:'3',a:'1'},'H_1-2':{h:'4',a:'0'},'H_1-3':{h:'0',a:'4'},'H_2-3':{h:'0',a:'1'},
+    'I_0-1':{h:'3',a:'1'},'I_0-2':{h:'4',a:'0'},'I_0-3':{h:'0',a:'3'},'I_1-2':{h:'1',a:'1'},'I_1-3':{h:'3',a:'0'},'I_2-3':{h:'0',a:'3'},
+    'J_0-1':{h:'2',a:'2'},'J_0-2':{h:'2',a:'1'},'J_0-3':{h:'0',a:'6'},'J_1-2':{h:'0',a:'3'},'J_1-3':{h:'1',a:'1'},'J_2-3':{h:'0',a:'5'},
+    'K_0-1':{h:'3',a:'0'},'K_0-2':{h:'2',a:'1'},'K_0-3':{h:'1',a:'1'},'K_1-2':{h:'2',a:'2'},'K_1-3':{h:'0',a:'2'},'K_2-3':{h:'2',a:'2'},
+    'L_0-1':{h:'1',a:'2'},'L_0-2':{h:'2',a:'0'},'L_0-3':{h:'1',a:'2'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'0',a:'4'},'L_2-3':{h:'3',a:'1'}
+  },
+  'Killian':{
+    'A_0-1':{h:'2',a:'1'},'A_0-2':{h:'1',a:'1'},'A_0-3':{h:'3',a:'1'},'A_1-2':{h:'0',a:'1'},'A_1-3':{h:'2',a:'0'},'A_2-3':{h:'0',a:'1'},
+    'B_0-1':{h:'4',a:'1'},'B_0-2':{h:'1',a:'0'},'B_0-3':{h:'2',a:'0'},'B_1-2':{h:'0',a:'3'},'B_1-3':{h:'0',a:'1'},'B_2-3':{h:'0',a:'3'},
+    'C_0-1':{h:'3',a:'1'},'C_0-2':{h:'5',a:'0'},'C_0-3':{h:'0',a:'4'},'C_1-2':{h:'1',a:'2'},'C_1-3':{h:'0',a:'1'},'C_2-3':{h:'3',a:'0'},
+    'D_0-1':{h:'2',a:'1'},'D_0-2':{h:'2',a:'1'},'D_0-3':{h:'0',a:'0'},'D_1-2':{h:'0',a:'1'},'D_1-3':{h:'2',a:'0'},'D_2-3':{h:'0',a:'0'},
+    'E_0-1':{h:'3',a:'0'},'E_0-2':{h:'3',a:'1'},'E_0-3':{h:'1',a:'2'},'E_1-2':{h:'1',a:'1'},'E_1-3':{h:'0',a:'2'},'E_2-3':{h:'2',a:'0'},
+    'F_0-1':{h:'3',a:'1'},'F_0-2':{h:'3',a:'1'},'F_0-3':{h:'0',a:'1'},'F_1-2':{h:'0',a:'1'},'F_1-3':{h:'0',a:'1'},'F_2-3':{h:'1',a:'0'},
+    'G_0-1':{h:'3',a:'2'},'G_0-2':{h:'2',a:'0'},'G_0-3':{h:'2',a:'0'},'G_1-2':{h:'0',a:'1'},'G_1-3':{h:'1',a:'0'},'G_2-3':{h:'0',a:'3'},
+    'H_0-1':{h:'4',a:'0'},'H_0-2':{h:'4',a:'0'},'H_0-3':{h:'2',a:'0'},'H_1-2':{h:'0',a:'2'},'H_1-3':{h:'0',a:'3'},'H_2-3':{h:'0',a:'1'},
+    'I_0-1':{h:'2',a:'1'},'I_0-2':{h:'3',a:'0'},'I_0-3':{h:'2',a:'3'},'I_1-2':{h:'2',a:'2'},'I_1-3':{h:'0',a:'2'},'I_2-3':{h:'1',a:'1'},
+    'J_0-1':{h:'3',a:'1'},'J_0-2':{h:'2',a:'0'},'J_0-3':{h:'0',a:'5'},'J_1-2':{h:'0',a:'3'},'J_1-3':{h:'0',a:'1'},'J_2-3':{h:'0',a:'3'},
+    'K_0-1':{h:'3',a:'0'},'K_0-2':{h:'1',a:'1'},'K_0-3':{h:'1',a:'2'},'K_1-2':{h:'1',a:'0'},'K_1-3':{h:'1',a:'2'},'K_2-3':{h:'0',a:'1'},
+    'L_0-1':{h:'2',a:'2'},'L_0-2':{h:'2',a:'1'},'L_0-3':{h:'2',a:'0'},'L_1-2':{h:'1',a:'0'},'L_1-3':{h:'0',a:'2'},'L_2-3':{h:'1',a:'1'}
+  }
+};
+
+const INIT_PLAYERS = ['ABA','Elodie','Gwendoline','Jean-Louis','Fred','Quang Anthony','Vincent','Corinne','Mathis','Gilbert','Laurent','Juan','Gautier','Imbert','Marc','Thierry','Korantin','Marco','Thibaud','QGTI','Victor','RBD','MBD','Claude','Emmanuel','Killian'];
+
+// ===== STATE =====
+let players = [];
+let pronostics = {};
+let realScores = {};
+let adminUnlocked = false;
+let pronoUnlocked = false;
+let lockedState = false;
+
+// Init joueurs
+if(!players){
+  players = [...INIT_PLAYERS];
+}
+
+// Init pronostics
+if(!pronostics){
+  pronostics = {};
+  for(const [name,data] of Object.entries(INIT_PROS)){
+    pronostics[name] = {};
+    for(const [k,v] of Object.entries(data)) pronostics[name][k]={h:v.h,a:v.a};
+  }
+}
+// Ajouter joueurs manquants
+for(const p of INIT_PLAYERS){
+  if(!players.includes(p)) players.push(p);
+  if(!pronostics[p] && INIT_PROS[p]){
+    pronostics[p]={};
+    for(const [k,v] of Object.entries(INIT_PROS[p])) pronostics[p][k]={h:v.h,a:v.a};
+  }
+}
+
+// ===== FIREBASE SYNC =====
+function save(){
+  db.ref('cdm26/players').set(players);
+  db.ref('cdm26/pronostics').set(pronostics);
+  db.ref('cdm26/real').set(realScores);
+}
+
+function initFromFirebase(callback){
+  db.ref('cdm26').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if(data){
+      if(data.players) players = data.players;
+      if(data.pronostics) pronostics = data.pronostics;
+      if(data.real) realScores = data.real;
+    }
+    // Injecter les pronostics initiaux pour les nouveaux joueurs
+    for(const [name,pdata] of Object.entries(INIT_PROS)){
+      if(!players.includes(name)) players.push(name);
+      if(!pronostics[name]){
+        pronostics[name]={};
+        for(const [k,v] of Object.entries(pdata)) pronostics[name][k]={h:v.h,a:v.a};
+      }
+    }
+    // Sauvegarder les données initiales dans Firebase
+    db.ref('cdm26/players').set(players);
+    db.ref('cdm26/pronostics').set(pronostics);
+    callback();
+  });
+}
+
+// Écouter les mises à jour en temps réel
+function startRealtimeSync(){
+  db.ref('cdm26/real').on('value', snapshot => {
+    const data = snapshot.val();
+    if(data) realScores = data;
+    // Rafraîchir le classement si affiché
+    if(document.getElementById('tab-classement').classList.contains('active')) renderLeaderboard();
+    // Rafraîchir les pronostics si affichés
+    if(document.getElementById('tab-pronostics').classList.contains('active') && pronoUnlocked) renderMatches();
+  });
+  db.ref('cdm26/pronostics').on('value', snapshot => {
+    const data = snapshot.val();
+    if(data) pronostics = data;
+    if(document.getElementById('tab-classement').classList.contains('active')) renderLeaderboard();
+  });
+  db.ref('cdm26/locked').on('value', snapshot => {
+    const val = snapshot.val();
+    lockedState = val === true || val === 1;
+    updateAdminLockUI();
+    if(pronoUnlocked) updateLockNotice();
+  });
+}
+
+// ===== UTILS =====
+function calcPts(ph,pa,rh,ra){
+  if(ph===null||pa===null||rh===null||ra===null)return null;
+  if(ph===rh&&pa===ra)return 5;
+  const pw=ph>pa?'H':ph<pa?'A':'D';
+  const rw=rh>ra?'H':rh<ra?'A':'D';
+  return pw===rw?2:0;
+}
+function pv(v){return v===''?null:parseInt(v);}
+
+// ===== UI =====
+function showTab(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['joueurs','pronostics','classement','admin'][i]===t));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='pronostics')renderMatches();
+  if(t==='classement')renderLeaderboard();
+  if(t==='admin'&&adminUnlocked)renderAdminMatches();
+}
+
+function renderPlayers(){
+  const list=document.getElementById('players-list');
+  const cur=document.getElementById('player-select').value;
+  list.innerHTML=players.map((p,i)=>
+    `<span class="player-chip${p===cur?' selected':''}" onclick="selectPlayer('${p.replace(/'/g,"\\'")}')">${p} <span onclick="removePlayer(event,${i})" style="opacity:.5;margin-left:3px">×</span></span>`
+  ).join('');
+  document.getElementById('player-count-info').textContent=`${players.length} joueurs`;
+  const sel=document.getElementById('player-select');
+  sel.innerHTML='<option value="">-- Choisir --</option>'+players.map(p=>`<option value="${p}"${p===cur?' selected':''}>${p}</option>`).join('');
+}
+function addPlayer(){
+  const inp=document.getElementById('new-player-name');
+  const n=inp.value.trim();
+  if(!n||players.includes(n))return;
+  players.push(n);inp.value='';save();renderPlayers();
+}
+function removePlayer(e,i){e.stopPropagation();if(!confirm('Supprimer ?'))return;players.splice(i,1);save();renderPlayers();}
+function selectPlayer(p){
+  document.getElementById('player-select').value=p;
+  renderPlayers();renderMatches();showTab('pronostics');
+}
+
+function renderMatches(){
+  const player=document.getElementById('player-select').value;
+  const gf=document.getElementById('group-filter').value;
+  const cont=document.getElementById('match-list');
+  if(!player){cont.innerHTML='<p style="color:#888;font-size:13px;padding:1rem">Sélectionner un joueur ci-dessus.</p>';
+    document.getElementById('player-summary').style.display='none';return;}
+  const pdata=pronostics[player]||{};
+  let pts=0,exact=0,win=0,played=0;
+  let html='',lastGrp='';
+  const filtered=gf?MATCHES_CLEAN.filter(m=>m.g===gf):MATCHES_CLEAN;
+  for(const m of filtered){
+    if(m.g!==lastGrp){
+      // Calculer les points du groupe pour ce joueur
+      const grpMatches=MATCHES_CLEAN.filter(x=>x.g===m.g);
+      let gpts=0;
+      for(const gm of grpMatches){
+        const gpd=pdata[gm.k]||{h:'',a:''};
+        const grd=realScores[gm.k]||{h:null,a:null};
+        const gp=calcPts(pv(gpd.h),pv(gpd.a),grd.h,grd.a);
+        if(gp!==null)gpts+=gp;
+      }
+      const ptsLabel=gpts>0?` <span style="font-size:11px;font-weight:400;color:#22c55e">+${gpts} pts</span>`:'';
+      html+=`<div class="day-header">Groupe ${m.g}${ptsLabel}</div>`;
+      lastGrp=m.g;
+    }
+    const pd=pdata[m.k]||{h:'',a:''};
+    const rd=realScores[m.k]||{h:null,a:null};
+    const ph=pv(pd.h),pa=pv(pd.a);
+    const p2=calcPts(ph,pa,rd.h,rd.a);
+    if(rd.h!==null){played++;if(p2===5)exact++;if(p2===2)win++;if(p2!==null)pts+=p2;}
+    const ht=tp(G[m.g][m.h]),at=tp(G[m.g][m.a]);
+    let dot='<span class="status-dot dot-none"></span>';
+    if(p2===5)dot='<span class="status-dot dot-exact" title="Score exact +5"></span>';
+    else if(p2===2)dot='<span class="status-dot dot-win" title="Bon résultat +2"></span>';
+    else if(p2===0)dot='<span class="status-dot dot-miss" title="Manqué"></span>';
+    html+=`<div class="match-row">
+      <div><div class="match-date">${m.d}/06 ${m.t}</div></div>
+      <div class="team"><span class="flag">${ht.flag}</span><span class="team-name">${ht.name}</span></div>
+      <div class="score-box">
+        <input type="number" min="0" max="30" value="${pd.h}" placeholder="–" data-key="${m.k}" data-side="h">
+        <span class="score-dash">–</span>
+        <input type="number" min="0" max="30" value="${pd.a}" placeholder="–" data-key="${m.k}" data-side="a">
+      </div>
+      <div class="team right"><span class="team-name">${at.name}</span><span class="flag">${at.flag}</span></div>
+      ${dot}
+    </div>`;
+  }
+  cont.innerHTML=html;
+  const sum=document.getElementById('player-summary');
+  sum.style.display='flex';
+  sum.innerHTML=`<div class="stat-card"><div class="num">${pts}</div><div class="lbl">Points</div></div>
+    <div class="stat-card"><div class="num">${exact}</div><div class="lbl">Exacts</div></div>
+    <div class="stat-card"><div class="num">${win}</div><div class="lbl">Bons résultats</div></div>
+    <div class="stat-card"><div class="num">${played}</div><div class="lbl">Matchs joués</div></div>`;
+  updateLockNotice();
+}
+
+function savePronostics(){
+  if(lockedState){alert('Les pronostics sont verrouillés.');return;}
+  const player=document.getElementById('player-select').value;
+  if(!player)return;
+  if(!pronostics[player])pronostics[player]={};
+  document.querySelectorAll('#match-list input[data-key]').forEach(inp=>{
+    const k=inp.dataset.key,s=inp.dataset.side;
+    if(!pronostics[player][k])pronostics[player][k]={h:'',a:''};
+    pronostics[player][k][s]=inp.value;
+  });
+  save();
+  const t=document.getElementById('save-toast');
+  t.style.display='inline';setTimeout(()=>t.style.display='none',2000);
+  renderMatches();renderLeaderboard();
+}
+
+function getPlayerPts(player){
+  const pd=pronostics[player]||{};
+  let pts=0,exact=0,win=0;
+  for(const m of MATCHES_CLEAN){
+    const d=pd[m.k]||{h:'',a:''};
+    const rd=realScores[m.k]||{h:null,a:null};
+    const p=calcPts(pv(d.h),pv(d.a),rd.h,rd.a);
+    if(p===5){pts+=5;exact++;}else if(p===2){pts+=2;win++;}
+  }
+  return{pts,exact,win};
+}
+
+function renderLeaderboard(){
+  const data=players.map(p=>({name:p,...getPlayerPts(p)})).sort((a,b)=>b.pts-a.pts||b.exact-a.exact);
+  document.getElementById('leaderboard-body').innerHTML=data.map((d,i)=>{
+    const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const rclass=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    return `<div class="lb-row ${rc}"><div class="rank ${rclass}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div>${d.name}</div><div class="col-r">${d.exact}</div><div class="col-r">${d.win}</div><div class="pts">${d.pts}</div></div>`;
+  }).join('');
+}
+
+// ADMIN
+function checkPronoPwd(){
+  const v=document.getElementById('prono-pwd-input').value;
+  if(v===PRONO_PWD){
+    pronoUnlocked=true;
+    document.getElementById('prono-pwd-screen').style.display='none';
+    document.getElementById('prono-content').style.display='block';
+    renderMatches();
+    updateLockNotice();
+  } else {
+    document.getElementById('prono-pwd-error').style.display='block';
+  }
+}
+function logoutProno(){
+  pronoUnlocked=false;
+  document.getElementById('prono-pwd-screen').style.display='block';
+  document.getElementById('prono-content').style.display='none';
+  document.getElementById('prono-pwd-input').value='';
+  document.getElementById('prono-pwd-error').style.display='none';
+}
+function updateLockNotice(){
+  const locked=lockedState;
+  const notice=document.getElementById('locked-notice');
+  const btnSave=document.getElementById('btn-save-prono');
+  if(notice){notice.style.display=locked?'block':'none';}
+  if(btnSave){btnSave.style.display=locked?'none':'inline-block';}
+  // Rendre les inputs lecture seule si verrouillé
+  document.querySelectorAll('#match-list input').forEach(inp=>{inp.disabled=locked;});
+}
+function toggleLock(){
+  if(!lockedState){
+    if(!confirm('Verrouiller les pronostics ? Les participants ne pourront plus modifier leurs scores.'))return;
+    db.ref('cdm26/locked').set(true);
+  } else {
+    if(!confirm('Déverrouiller les pronostics ?'))return;
+    db.ref('cdm26/locked').set(false);
+  }
+}
+function updateAdminLockUI(){
+  const locked=lockedState;
+  const status=document.getElementById('lock-status');
+  const btn=document.getElementById('btn-toggle-lock');
+  if(status){status.innerHTML=locked?'🔴 Pronostics verrouillés':'🟢 Pronostics ouverts';}
+  if(btn){
+    btn.textContent=locked?'🔓 Déverrouiller':'🔒 Verrouiller les pronostics';
+    btn.style.background=locked?'#dcfce7':'#fee2e2';
+    btn.style.border=locked?'1px solid #86efac':'1px solid #fca5a5';
+  }
+}
+function checkPwd(){
+  const v=document.getElementById('pwd-input').value;
+  if(v===ADMIN_PWD){
+    adminUnlocked=true;
+    document.getElementById('admin-pwd-screen').style.display='none';
+    document.getElementById('admin-content').style.display='block';
+    renderAdminMatches();
+  } else {
+    document.getElementById('pwd-error').style.display='block';
+  }
+}
+function logoutAdmin(){
+  adminUnlocked=false;
+  document.getElementById('admin-pwd-screen').style.display='block';
+  document.getElementById('admin-content').style.display='none';
+  document.getElementById('pwd-input').value='';
+  document.getElementById('pwd-error').style.display='none';
+}
+function renderAdminMatches(){
+  let html='',lastGrp='';
+  for(const m of MATCHES_CLEAN){
+    if(m.g!==lastGrp){html+=`<div class="day-header">Groupe ${m.g}</div>`;lastGrp=m.g;}
+    const rd=realScores[m.k]||{h:'',a:''};
+    const ht=tp(G[m.g][m.h]),at=tp(G[m.g][m.a]);
+    html+=`<div class="match-row">
+      <div><div class="match-date">${m.d}/06 ${m.t}</div><div class="group-tag">Grp ${m.g}</div></div>
+      <div class="team"><span class="flag">${ht.flag}</span><span class="team-name">${ht.name}</span></div>
+      <div class="score-box">
+        <input type="number" min="0" max="30" value="${rd.h??''}" placeholder="–" data-key="${m.k}" data-side="h" class="admin-inp" style="border-color:#f0a500">
+        <span class="score-dash">–</span>
+        <input type="number" min="0" max="30" value="${rd.a??''}" placeholder="–" data-key="${m.k}" data-side="a" class="admin-inp" style="border-color:#f0a500">
+      </div>
+      <div class="team right"><span class="team-name">${at.name}</span><span class="flag">${at.flag}</span></div>
+      <span></span>
+    </div>`;
+  }
+  document.getElementById('admin-match-list').innerHTML=html;
+  updateAdminLockUI();
+}
+function saveAdminScores(){
+  document.querySelectorAll('#admin-match-list .admin-inp').forEach(inp=>{
+    const k=inp.dataset.key,s=inp.dataset.side;
+    if(!realScores[k])realScores[k]={h:null,a:null};
+    realScores[k][s]=inp.value===''?null:parseInt(inp.value);
+  });
+  save();
+  const t=document.getElementById('admin-toast');
+  t.style.display='inline';setTimeout(()=>t.style.display='none',2000);
+}
+
+// INIT depuis Firebase
+document.body.insertAdjacentHTML('afterbegin','<div id="loading-screen" style="position:fixed;inset:0;background:#f5f4f0;display:flex;align-items:center;justify-content:center;z-index:9999;font-size:16px;color:#666">⏳ Chargement des données...</div>');
+initFromFirebase(() => {
+  document.getElementById('loading-screen').remove();
+  renderPlayers();
+  renderLeaderboard();
+  startRealtimeSync();
+});
+</script>
+</body>
+</html>
